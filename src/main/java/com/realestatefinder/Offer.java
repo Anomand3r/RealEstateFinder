@@ -10,10 +10,6 @@ public class Offer {
     private String floor;
     private String roomStructure;
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getLink() {
         return link;
     }
@@ -72,20 +68,34 @@ public class Offer {
 
     @Override
     public String toString() {
-        return "Offer{" +
-                "id='" + id + '\'' +
-                ", link='" + link + '\'' +
-                ", title='" + title + '\'' +
-                ", price=" + price +
-                ", rooms=" + rooms +
-                ", surface=" + surface +
-                ", floor='" + floor + '\'' +
-                ", roomStructure='" + roomStructure + '\'' +
-                ", pricePerSquareMeter=" + getPricePerSquareMeter() +
-                '}';
+        return "<p><a href='" + link + "'>" + title + "</a>: " + price + " EUR / suprafata: " + surface + " / camere: " + rooms + " / " + floor + " / " + roomStructure + " / pret/mp: " + getPricePerSquareMeter() + "</p>";
+//        return "Offer{" +
+//                "id='" + id + '\'' +
+//                ", link='" + link + '\'' +
+//                ", title='" + title + '\'' +
+//                ", price=" + price +
+//                ", rooms=" + rooms +
+//                ", surface=" + surface +
+//                ", floor='" + floor + '\'' +
+//                ", roomStructure='" + roomStructure + '\'' +
+//                ", pricePerSquareMeter=" + getPricePerSquareMeter() +
+//                '}';
     }
 
     public double getPricePerSquareMeter() {
-        return price / surface;
+        return getPrice() / surface;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNeighbourhood() {
+        int prefixEnd = link.indexOf("cluj-napoca/") + "cluj-napoca/".length();
+        return link.substring(prefixEnd, link.indexOf('/', prefixEnd)).toUpperCase();
     }
 }
