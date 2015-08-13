@@ -9,6 +9,7 @@ public class Offer {
     private double surface;
     private String floor;
     private String roomStructure;
+    private ClujNeighbourhood neighbourhood;
 
     public String getLink() {
         return link;
@@ -94,8 +95,43 @@ public class Offer {
         this.id = id;
     }
 
-    public String getNeighbourhood() {
-        int prefixEnd = link.indexOf("cluj-napoca/") + "cluj-napoca/".length();
-        return link.substring(prefixEnd, link.indexOf('/', prefixEnd)).toUpperCase();
+    public ClujNeighbourhood getNeighbourhood() {
+        return neighbourhood;
+    }
+
+    public void setNeighbourhood(ClujNeighbourhood neighbourhood) {
+        this.neighbourhood = neighbourhood;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Offer offer = (Offer) o;
+        if (id.equals(offer.getId())) {
+            return true;
+        }
+
+        if (price != offer.price) return false;
+        if (rooms != offer.rooms) return false;
+        if (Double.compare(offer.surface, surface) != 0) return false;
+        if (roomStructure != null ? !roomStructure.equals(offer.roomStructure) : offer.roomStructure != null)
+            return false;
+        return !(neighbourhood != null ? !neighbourhood.equals(offer.neighbourhood) : offer.neighbourhood != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = price;
+        result = 31 * result + rooms;
+        temp = Double.doubleToLongBits(surface);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (roomStructure != null ? roomStructure.hashCode() : 0);
+        result = 31 * result + (neighbourhood != null ? neighbourhood.hashCode() : 0);
+        return result;
     }
 }

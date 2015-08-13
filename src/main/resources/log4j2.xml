@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <File name="OlxOfferRetrieverFile" fileName="C:\logs\OlxOfferRetriever.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <File name="RealEstateFinderFile" fileName="C:\logs\RealEstateFinderFile.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.realestatefinder.olx" level="info" additivity="false">
+            <AppenderRef ref="OlxOfferRetrieverFile"/>
+        </Logger>
+        <Logger name="com.realestatefinder" level="info" additivity="false">
+            <AppenderRef ref="RealEstateFinderFile"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
