@@ -15,19 +15,14 @@ import java.util.stream.Collectors;
 
 public class RealEstateFinder {
     public static final String DATABASE_CONNECTION_STRING = "jdbc:sqlite:src/main/resources/RealEstateFinder.db";
+    public static final int AVERAGE_PRICE_PER_SQUARE_METER = 1022;
     private static final Logger logger = LogManager.getLogger(RealEstateFinder.class.getName());
 
     public static void main(String[] args) throws IOException, SQLException {
-//        List<Offer> olxOffers = getOlxOffers();
-//
-//        List<Offer> dbOffers = getOffersFromDB();
-//        removeDuplicateOffers(olxOffers, dbOffers);
-//        insertOffersInDB(olxOffers);
-
-//        updateNeighbourhoodsInDB(offers);
-//        sendOffersGroupedByNeighbourhood(offers);
-//        getOffersFromImobiliare();
-//        insertOffersInDB();
+        List<Offer> offers = getOffersFromDB();
+        MailSender.sendMail("Oferte 19.08.2015 +2 camere < 50000 (smart sort)", offers.stream().filter(o -> o.getPrice() <= 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1.getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).map(Offer::toString).collect(Collectors.joining("<br/>")));
+//        Map<ClujNeighbourhood, List<Offer>> offersByNeighbourhood = offers.stream().filter(o -> o.getPrice() <= 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1.getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).collect(Collectors.groupingBy(Offer::getNeighbourhood)).collect((Collectors.joining("<br/><br/>")))).
+//        MailSender.sendMail("Oferte 19.08.2015 +2 camere < 50000 (smart sort)", offersByNeighbourhood.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).map(entry -> "<p><strong>" + entry.getKey() + "</strong> (" + entry.getValue().size() + " oferte)</p><p>--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>" + entry.getValue().stream().map(Offer::toString).collect(Collectors.joining("<br/>"))).collect((Collectors.joining("<br/><br/>"))));
 
 //        System.out.println(offers.stream().sorted((o1, o2) -> (int) (o1.getPricePerSquareMeter() - o2.getPricePerSquareMeter())).limit(100).map(Offer::toString).collect(Collectors.joining("\n")));
 //        System.out.println("offers = " + olxOffers);
@@ -46,37 +41,21 @@ public class RealEstateFinder {
         }
     }
 
-
-    private static void updateNeighbourhoodsInDB(List<Offer> offers) throws SQLException {
-        Connection c = DriverManager.getConnection(DATABASE_CONNECTION_STRING);
-        PreparedStatement updateNeighbourhood = c.prepareStatement("UPDATE OFFER SET NEIGHBOURHOOD = ? WHERE ID = ?");
-        offers.stream().forEach(o -> {
-            try {
-                updateNeighbourhood.setString(1, o.getNeighbourhood().getNeighbourhoodName());
-                updateNeighbourhood.setString(2, o.getId());
-                updateNeighbourhood.executeUpdate();
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
-        c.close();
-    }
-
     public static void insertOffersInDB(List<Offer> offers) throws SQLException {
         Connection c = DriverManager.getConnection(DATABASE_CONNECTION_STRING);
-        PreparedStatement insertOffer = c.prepareStatement("INSERT INTO OFFER VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+        PreparedStatement insertOffer = c.prepareStatement("INSERT OR REPLACE INTO OFFER VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
         PreparedStatement insertPrice = c.prepareStatement("INSERT INTO OFFER_PRICE(OFFER_ID, PRICE, DATE) VALUES(?, ?, ?)");
         offers.stream().forEach(o -> {
             try {
                 insertOffer.setString(1, o.getId());
                 insertOffer.setString(2, o.getLink());
                 insertOffer.setString(3, o.getTitle());
-                insertOffer.setInt(4, o.getRooms());
+                insertOffer.setDouble(4, o.getPrice());
                 insertOffer.setDouble(5, o.getSurface());
-                insertOffer.setString(6, o.getFloor());
-                insertOffer.setString(7, o.getRoomStructure());
-                insertOffer.setString(8, o.getNeighbourhood().getNeighbourhoodName());
+                insertOffer.setInt(6, o.getRooms());
+                insertOffer.setString(7, o.getFloor());
+                insertOffer.setString(8, o.getRoomStructure());
+                insertOffer.setString(9, o.getNeighbourhood().getNeighbourhoodName());
                 insertOffer.executeUpdate();
 
                 insertPrice.setString(1, o.getId());
@@ -85,7 +64,7 @@ public class RealEstateFinder {
                 insertPrice.executeUpdate();
 
             } catch (SQLException e) {
-                logger.error(e);
+                logger.error("An error has occurred while trying to insert offers in the database", e);
             }
         });
         c.close();
@@ -102,22 +81,17 @@ public class RealEstateFinder {
         List<Offer> offers = new ArrayList<>();
         Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_STRING);
         ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM OFFER");
-        PreparedStatement priceStatement = connection.prepareStatement("SELECT PRICE FROM OFFER_PRICE WHERE OFFER_ID = ?");
         while (resultSet.next()) {
             Offer offer = new Offer();
             offer.setId(resultSet.getString("ID"));
             offer.setLink(resultSet.getString("LINK"));
             offer.setTitle(resultSet.getString("TITLE"));
+            offer.setPrice(resultSet.getInt("PRICE"));
             offer.setRooms(resultSet.getInt("ROOMS"));
             offer.setSurface(resultSet.getDouble("SURFACE"));
             offer.setFloor(resultSet.getString("FLOOR"));
             offer.setRoomStructure(resultSet.getString("ROOM_STRUCTURE"));
             offer.setNeighbourhood(ClujNeighbourhood.getNeighbourhood(resultSet.getString("NEIGHBOURHOOD")));
-            priceStatement.setString(1, offer.getId());
-            ResultSet priceResultSet = priceStatement.executeQuery();
-            priceResultSet.next();
-            offer.setPrice(priceResultSet.getInt("PRICE"));
-
             offers.add(offer);
         }
         connection.close();

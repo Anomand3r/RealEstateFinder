@@ -19,12 +19,13 @@ public class ImobiliareOfferRetriever {
     private static final Logger logger = LogManager.getLogger(ImobiliareOfferRetriever.class.getName());
 
     public static void main(String[] args) {
-        //TODO check this and finish it
         try {
-            List<Offer> offers = getOffersFromImobiliare();
-            RealEstateFinder.insertOffersInDB(offers);
+            List<Offer> imobiliareOffers = getOffersFromImobiliare();
+            List<Offer> dbOffers = RealEstateFinder.getOffersFromDB();
+            RealEstateFinder.removeDuplicateOffers(imobiliareOffers, dbOffers);
+            RealEstateFinder.insertOffersInDB(imobiliareOffers);
         } catch (IOException | SQLException e) {
-            logger.error(e);
+            logger.error("An error has occurred while obtaining the offers from Imobiliare", e);
         }
     }
 
@@ -36,9 +37,10 @@ public class ImobiliareOfferRetriever {
             int pageOffers = 0;
             for (Element element : document.select("div[itemtype=http://schema.org/Offer]")) {
                 Offer offer = new Offer();
-                offer.setId(element.id());
                 Element nameLink = element.select("a[itemprop=name]").first();
-                offer.setLink(nameLink.attr("href"));
+                String link = nameLink.attr("href");
+                offer.setId(link);
+                offer.setLink(link);
                 offer.setTitle(nameLink.text());
                 Elements priceElement = element.select("div[itemprop=price]");
                 if (priceElement.size() == 0) {

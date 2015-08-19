@@ -25,7 +25,7 @@ public class OlxOfferRetriever {
             RealEstateFinder.removeDuplicateOffers(olxOffers, dbOffers);
             RealEstateFinder.insertOffersInDB(olxOffers);
         } catch (IOException | SQLException e) {
-            logger.error(e);
+            logger.error("An error has occurred while obtaining the offers from Imobiliare", e);
         }
     }
 

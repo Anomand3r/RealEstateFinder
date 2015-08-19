@@ -36,6 +36,36 @@
                             </archive>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>ImobiliareOfferRetriever</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>ImobiliareOfferRetriever</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.realestatefinder.imobiliare.ImobiliareOfferRetriever</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>RealEstateFinder</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>RealEstateFinder</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.realestatefinder.RealEstateFinder</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

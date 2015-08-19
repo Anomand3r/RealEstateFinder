@@ -1,5 +1,8 @@
 package com.realestatefinder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -8,7 +11,8 @@ import java.util.Properties;
 public class MailSender {
 
     private static final String username = "cjcr.alxandru@gmail.com";
-    private static final String password = "qbdeltqnjenwhtfi";
+    private static final String password = "<password>";
+    private static final Logger logger = LogManager.getLogger(MailSender.class.getName());
 
     private static Session session;
 
@@ -38,8 +42,9 @@ public class MailSender {
             message.setContent(text, "text/html; charset=utf-8");
 
             Transport.send(message);
+            logger.info("Successfully sent email to cjcr_alexandru@yahoo.com.");
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            logger.error("An error has occurred while sending email", e);
         }
     }
 

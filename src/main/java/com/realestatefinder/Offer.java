@@ -1,6 +1,11 @@
 package com.realestatefinder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Offer {
+    private static final Logger logger = LogManager.getLogger(Offer.class.getName());
+
     private String id;
     private String link;
     private String title;
@@ -110,6 +115,10 @@ public class Offer {
 
         Offer offer = (Offer) o;
         if (id.equals(offer.getId())) {
+            if (price != offer.price) {
+                logger.info("PRICE UPDATE DETECTED: " + id + " - " + price + " -> " + offer.price);
+                return false;
+            }
             return true;
         }
 
