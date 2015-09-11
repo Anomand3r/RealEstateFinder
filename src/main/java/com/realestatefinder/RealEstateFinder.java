@@ -15,16 +15,36 @@ import java.util.stream.Collectors;
 
 public class RealEstateFinder {
     public static final String DATABASE_CONNECTION_STRING = "jdbc:sqlite:src/main/resources/RealEstateFinder.db";
-    public static final int AVERAGE_PRICE_PER_SQUARE_METER = 1022;
+    public static final int AVERAGE_PRICE_PER_SQUARE_METER = 1103;
     private static final Logger logger = LogManager.getLogger(RealEstateFinder.class.getName());
 
     public static void main(String[] args) throws IOException, SQLException {
         List<Offer> offers = getOffersFromDB();
-        MailSender.sendMail("Oferte 19.08.2015 +2 camere < 50000 (smart sort)", offers.stream().filter(o -> o.getPrice() <= 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1.getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).map(Offer::toString).collect(Collectors.joining("<br/>")));
-//        Map<ClujNeighbourhood, List<Offer>> offersByNeighbourhood = offers.stream().filter(o -> o.getPrice() <= 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1.getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).collect(Collectors.groupingBy(Offer::getNeighbourhood)).collect((Collectors.joining("<br/><br/>")))).
-//        MailSender.sendMail("Oferte 19.08.2015 +2 camere < 50000 (smart sort)", offersByNeighbourhood.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).map(entry -> "<p><strong>" + entry.getKey() + "</strong> (" + entry.getValue().size() + " oferte)</p><p>--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>" + entry.getValue().stream().map(Offer::toString).collect(Collectors.joining("<br/>"))).collect((Collectors.joining("<br/><br/>"))));
+//        MailSender.sendMail("Oferte 24.08.2015 +2 camere < 50000 (smart sort)", offers.stream().filter(o -> o
+// .getPrice() <= 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1
+// .getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).map
+// (Offer::toString).collect(Collectors.joining("<br/>")));
+//        Map<ClujNeighbourhood, List<Offer>> offersByNeighbourhood = offers.stream().filter(o -> o.getPrice() <=
+// 50000 && o.getRooms() > 1).sorted((o1, o2) -> (int) (Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o1
+// .getPricePerSquareMeter()) - Math.abs(AVERAGE_PRICE_PER_SQUARE_METER - o2.getPricePerSquareMeter()))).collect
+// (Collectors.groupingBy(Offer::getNeighbourhood));
+//        MailSender.sendMail("Oferte 11.09.2015 +2 camere < 50000", offersByNeighbourhood.entrySet()
+//                .stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).map(entry -> "<p><strong>" + entry
+//                        .getKey() + "</strong> (" + entry.getValue().size() + " oferte)
+// </p><p
+// >--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>" + entry.getValue().stream().map(Offer::toString).collect(Collectors.joining("<br/>"))).collect((Collectors.joining("<br/><br/>"))));
+        MailSender.sendMail("Oferte 11.09.2015 +2 camere < 50000", offers.stream().filter(o -> o.getPrice() <= 50000
+                && o.getRooms() > 1).sorted((o1, o2) -> {
+            double diff = o2.getPrice() - o1.getPrice();
+            if (diff == 0) {
+                diff = o2.getSurface() - o1.getSurface();
+            }
+            return (int) diff;
+        }).map(Offer::toString).collect
+                (Collectors.joining("<br/>")));
 
-//        System.out.println(offers.stream().sorted((o1, o2) -> (int) (o1.getPricePerSquareMeter() - o2.getPricePerSquareMeter())).limit(100).map(Offer::toString).collect(Collectors.joining("\n")));
+//        System.out.println(offers.stream().sorted((o1, o2) -> (int) (o1.getPricePerSquareMeter() - o2
+// .getPricePerSquareMeter())).limit(100).map(Offer::toString).collect(Collectors.joining("\n")));
 //        System.out.println("offers = " + olxOffers);
 //        System.out.println("offers.size() = " + offers.size());
     }
@@ -36,15 +56,18 @@ public class RealEstateFinder {
             int dbOfferIndex = dbOffers.indexOf(olxOffer);
             if (dbOfferIndex > -1) {
                 iterator.remove();
-                logger.info("Ignoring duplicate offer: " + dbOffers.get(dbOfferIndex).getLink() + " & " + olxOffer.getLink());
+                logger.info("Ignoring duplicate offer: " + dbOffers.get(dbOfferIndex).getLink() + " & " + olxOffer
+                        .getLink());
             }
         }
     }
 
     public static void insertOffersInDB(List<Offer> offers) throws SQLException {
         Connection c = DriverManager.getConnection(DATABASE_CONNECTION_STRING);
-        PreparedStatement insertOffer = c.prepareStatement("INSERT OR REPLACE INTO OFFER VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        PreparedStatement insertPrice = c.prepareStatement("INSERT INTO OFFER_PRICE(OFFER_ID, PRICE, DATE) VALUES(?, ?, ?)");
+        PreparedStatement insertOffer = c.prepareStatement("INSERT OR REPLACE INTO OFFER VALUES(?, ?, ?, ?, ?, ?, ?, " +
+                "?, ?)");
+        PreparedStatement insertPrice = c.prepareStatement("INSERT INTO OFFER_PRICE(OFFER_ID, PRICE, DATE) VALUES(?, " +
+                "?, ?)");
         offers.stream().forEach(o -> {
             try {
                 insertOffer.setString(1, o.getId());
@@ -73,8 +96,13 @@ public class RealEstateFinder {
 
 
     private static void sendOffersGroupedByNeighbourhood(List<Offer> offers) {
-        Map<ClujNeighbourhood, List<Offer>> offersByNeighbourhood = offers.stream().sorted((o1, o2) -> (int) (o1.getPricePerSquareMeter() - o2.getPricePerSquareMeter())).collect(Collectors.groupingBy(Offer::getNeighbourhood));
-        MailSender.sendMail("Oferte 12.08.2015", offersByNeighbourhood.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).map(entry -> "<p><strong>" + entry.getKey() + "</strong> (" + entry.getValue().size() + " oferte)</p><p>--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>" + entry.getValue().stream().map(Offer::toString).collect(Collectors.joining("<br/>"))).collect((Collectors.joining("<br/><br/>"))));
+        Map<ClujNeighbourhood, List<Offer>> offersByNeighbourhood = offers.stream().sorted((o1, o2) -> (int) (o1
+                .getPricePerSquareMeter() - o2.getPricePerSquareMeter())).collect(Collectors.groupingBy
+                (Offer::getNeighbourhood));
+        MailSender.sendMail("Oferte 12.08.2015", offersByNeighbourhood.entrySet().stream().sorted((e1, e2) -> e1
+                .getKey().compareTo(e2.getKey())).map(entry -> "<p><strong>" + entry.getKey() + "</strong> (" + entry
+                .getValue().size() + " oferte)" +
+                "</p><p>--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>" + entry.getValue().stream().map(Offer::toString).collect(Collectors.joining("<br/>"))).collect((Collectors.joining("<br/><br/>"))));
     }
 
     public static List<Offer> getOffersFromDB() throws SQLException {
